@@ -49,12 +49,16 @@ class AdTableModel:
         return response.json() if response.status_code == 200 else {}
 
     @staticmethod
-    def get_insights(plataforma, platforms_dic):
+    def get_insights(plataforma, platforms_dic, fields, accounts):
         if not API_URL or not API_TOKEN:
             raise ValueError("URL ou Token não encontrado no ambiente")
 
         single_value_platform = platforms_dic[plataforma]
-        url = f"{API_URL}/insights?platform={single_value_platform}&account={account}&token={API_TOKEN}&fields={fields_str}"
+        fields_str = ",".join(field["value"] for field in fields)
+        # to Do. pegar os ids e tokens
+        # id_accounts_list = accounts
+
+        url = f"{API_URL}/insights?platform={single_value_platform}&account={account}&token={USER_TOKEN}&fields={fields_str}"
         # fields = ["field1", "field2", "field3"]  # Lista de campos
         # Convertendo a lista de campos para uma string separada por vírgula
         # fields_str = ",".join(fields)

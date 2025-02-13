@@ -54,9 +54,15 @@ class AdTableController:
         return fields
     
     @staticmethod
-    def get_insights():
-        pass
+    def get_insights(plataforma):
+        platforms_dic = AdTableController.get_platform(plataforma)
+        fields = AdTableModel.get_fields(plataforma, platforms_dic)
+        platforms_dic = AdTableController.get_platform(plataforma)
+        accounts = AdTableController.get_accounts(plataforma, platforms_dic)
 
+        insights = AdTableModel.get_insights(plataforma, platforms_dic, fields, accounts)
+
+        return insights
 
 
 Ad_table_controller.add_url_rule(
