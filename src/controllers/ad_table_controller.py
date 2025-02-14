@@ -1,70 +1,67 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint
 from src.models.ad_table_model import AdTableModel
 
-# import csv
-# from io import StringIO
 
-Ad_table_controller = Blueprint("platform_controller", __name__)
+ad_table_controller = Blueprint("platform_controller", __name__)
 
 
-# Aqui você poderia integrar com a API da Stract ou outra fonte de dados.
 class AdTableController:
     @staticmethod
-    def create_ad_table(plataforma):
-        platforms_dic = AdTableController.get_platform(plataforma)
+    async def create_ad_table(plataforma):
+        if plataforma == "favicon.ico":
+            raise ValueError("plataforma contem favicon.ico")
 
-        list_acounts_platform = AdTableController.get_accounts(plataforma, platforms_dic)
+        try:
+            platforms_dic = await AdTableController.get_platform(plataforma)
+            if plataforma not in platforms_dic:
+                raise ValueError(f"{plataforma} não está na lista: {platforms_dic}")
 
-        fields = AdTableController.get_fields(plataforma)
-
-        return [platforms_dic, list_acounts_platform, fields]
+            account_list = await AdTableController.get_accounts(
+                plataforma, platforms_dic
+            )
+            fields = await AdTableController.get_fields(plataforma)
+            insights = await AdTableController.get_insights(
+                plataforma, platforms_dic, account_list, fields
+            )
+            return [insights, fields]
+        except Exception as e:
+            return f"Erro ao processar a solicitação: {str(e)}"
 
     @staticmethod
-    def get_platform(plataforma):
-        platforms_data = AdTableModel.get_platforms()
+    async def get_platform(plataforma):
+        platforms_data = await AdTableModel.get_platforms()
 
-        if "platforms" not in platforms_data:
-            return jsonify({"error": "Erro ao obter plataformas"}), 500
-
-        platforms = platforms_data["platforms"]
-
-        # Buscar pela plataforma no valor (em vez da chave)
+        platforms = platforms_data.get("platforms")
         platforms_dic = {plat["text"]: plat["value"] for plat in platforms}
 
         if plataforma not in platforms_dic:
-            return jsonify({"error": f"Plataforma '{plataforma}' não encontrada na lista de plataformas: {platforms_dic}"}), 404
+            raise ValueError(f"{plataforma} não esta na lista: {platforms_dic}")
 
         return platforms_dic
 
     @staticmethod
-    def get_accounts(plataforma, platforms_dic):
-        """Obtém as contas de uma plataforma específica."""
-
-        accounts_platform = AdTableModel.get_accounts(plataforma, platforms_dic)
-
-        if not accounts_platform:
-            return jsonify({"error": "Erro ao obter contas"}), 500
+    async def get_accounts(plataforma, platforms_dic):
+        accounts_platform = await AdTableModel.get_accounts(
+            plataforma, platforms_dic
+        )
 
         return accounts_platform
 
     @staticmethod
-    def get_fields(plataforma):
-        platforms_dic = AdTableController.get_platform(plataforma)
-        fields = AdTableModel.get_fields(plataforma, platforms_dic)
+    async def get_fields(plataforma):
+        platforms_dic = await AdTableController.get_platform(plataforma)
+        fields = await AdTableModel.get_fields(plataforma, platforms_dic)
         return fields
-    
-    @staticmethod
-    def get_insights(plataforma):
-        platforms_dic = AdTableController.get_platform(plataforma)
-        fields = AdTableModel.get_fields(plataforma, platforms_dic)
-        platforms_dic = AdTableController.get_platform(plataforma)
-        accounts = AdTableController.get_accounts(plataforma, platforms_dic)
 
-        insights = AdTableModel.get_insights(plataforma, platforms_dic, fields, accounts)
+    @staticmethod
+    async def get_insights(plataforma, platforms_dic, accounts, fields):
+        insights = await AdTableModel.get_insights(
+            plataforma, platforms_dic, accounts, fields
+        )
 
         return insights
 
 
-Ad_table_controller.add_url_rule(
-    "/<plataforma>", "get_table", AdTableController.create_ad_table
+ad_table_controller.add_url_rule(
+    "/<string:plataforma>", "get_table", AdTableController.create_ad_table
 )
