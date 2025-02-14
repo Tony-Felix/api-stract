@@ -23,7 +23,7 @@ class AdTableController:
             insights = await AdTableController.get_insights(
                 plataforma, platforms_dic, account_list, fields
             )
-            return [insights, fields]
+            return [insights]
         except Exception as e:
             return f"Erro ao processar a solicitação: {str(e)}"
 

@@ -90,12 +90,11 @@ class AdTableModel:
 
                     if response.status_code != 200:
                         raise Exception(f"Erro na requisição: {response.status_code}")
-                    
+
                     data = response.json()
-                    print(f"testa data antes de dar problema, {data}")
-                    if not data:  # Verifique se a resposta está vazia
+                    if not data:
                         raise Exception("A resposta da API está vazia.")
-                    
+
                     fields = data.get("fields")
 
                     if not fields:
@@ -123,24 +122,38 @@ class AdTableModel:
         if not API_URL or not API_TOKEN:
             raise ValueError("URL ou Token não encontrado no ambiente")
 
-        # single_value_platform = platforms_dic[plataforma]
-        # fields_str = ",".join(field["value"] for field in fields)
+        single_value_platform = platforms_dic[plataforma]
+        fields_str = ",".join(field["value"] for field in fields)
 
-        return "em produção"
-    #     "pagination": {
-    #   "current": 1,
-    #   "total": 3
+        print(fields_str)
+        insights_list = []
+        for user in accounts:
+            USER_TOKEN, id, name = user["token"], user["id"], user["name"]
 
-        # url = f"{API_URL}/insights?platform={single_value_platform}&account
-        # ={account}&token={USER_TOKEN}&fields={fields_str}"
-        # # fields = ["field1", "field2", "field3"]  # Lista de campos
-        # # Convertendo a lista de campos para uma string separada por vírgula
-        # # fields_str = ",".join(fields)
+            url = f"{API_URL}/insights?platform={single_value_platform}&account={id}&token={USER_TOKEN}&fields={fields_str}"
 
-        # headers = {"Authorization": f"Bearer {API_TOKEN}"}
+            headers = {"Authorization": f"Bearer {API_TOKEN}"}
 
-        # response = requests.get(url, headers=headers)
-        # return response.json() if response.status_code == 200 else {}
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, headers=headers, timeout=90.0)
+                if response.status_code != 200:
+                    raise Exception(f"Erro ao obter insights da conta {id}")
+                insights_data = response.json()
+
+                print(f"chegou aquiuiuiuiiuhjdhsdjshdjshdjshdjshdjsdhsjhsd {insights_data}")
+
+                if not isinstance(insights_data, dict) or "insights" not in insights_data:
+                    raise ValueError(f"Resposta da API inválida: esperado uma lista, mas recebeu {insights_data}")
+
+                for data in insights_data["insights"]:
+                    data.pop("id", None)
+                    data["account_name"] = name
+
+                # Adiciona os itens de insights diretamente à lista final
+                insights_list.extend(insights_data["insights"])
+
+        print(insights_list)
+        return insights_list
 
 
 # if __name__ == "__main__":
