@@ -1,4 +1,5 @@
-import asyncio
+import csv
+import io
 import httpx
 from config import API_URL, API_TOKEN
 
@@ -125,7 +126,6 @@ class AdTableModel:
         single_value_platform = platforms_dic[plataforma]
         fields_str = ",".join(field["value"] for field in fields)
 
-        print(fields_str)
         insights_list = []
         for user in accounts:
             USER_TOKEN, id, name = user["token"], user["id"], user["name"]
@@ -140,21 +140,29 @@ class AdTableModel:
                     raise Exception(f"Erro ao obter insights da conta {id}")
                 insights_data = response.json()
 
-                print(f"chegou aquiuiuiuiiuhjdhsdjshdjshdjshdjshdjsdhsjhsd {insights_data}")
-
                 if not isinstance(insights_data, dict) or "insights" not in insights_data:
-                    raise ValueError(f"Resposta da API inválida: esperado uma lista, mas recebeu {insights_data}")
+                    raise ValueError(f"Resposta da API inválida: esperado uma "
+                                     f"lista, mas recebeu {insights_data}")
 
                 for data in insights_data["insights"]:
-                    data.pop("id", None)
-                    data["account_name"] = name
+                    data.pop("id", None)  # Remover ID se presente
+                    data["account_name"] = name  # Adicionar o nome da conta
+                    data["platform"] = plataforma  # Adicionar o nome da 
 
-                # Adiciona os itens de insights diretamente à lista final
-                insights_list.extend(insights_data["insights"])
+                    insights_list.append(data)
 
-        print(insights_list)
-        return insights_list
+        # Criando e escrevendo no arquivo CSV
+        csv_table = await AdTableModel.create_csv(insights_list)
+        return csv_table
 
+    @staticmethod
+    async def create_csv(lista_data):
+        output = io.StringIO()
+        fieldnames = list(lista_data[0].keys())
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        
+        # Escreve o cabeçalho e os dados no CSV
+        writer.writeheader()
+        writer.writerows(lista_data)
 
-# if __name__ == "__main__":
-#     AdTableModel.get_insights("facebook Ad", )
+        return output.getvalue()

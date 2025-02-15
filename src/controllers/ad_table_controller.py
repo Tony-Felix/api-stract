@@ -2,7 +2,7 @@ from flask import Blueprint
 from src.models.ad_table_model import AdTableModel
 
 
-ad_table_controller = Blueprint("platform_controller", __name__)
+ad_table_controller = Blueprint("ad_table_controller", __name__)
 
 
 class AdTableController:
@@ -20,10 +20,10 @@ class AdTableController:
                 plataforma, platforms_dic
             )
             fields = await AdTableController.get_fields(plataforma)
-            insights = await AdTableController.get_insights(
+            table = await AdTableController.get_insights(
                 plataforma, platforms_dic, account_list, fields
             )
-            return [insights]
+            return table
         except Exception as e:
             return f"Erro ao processar a solicitação: {str(e)}"
 
@@ -35,7 +35,8 @@ class AdTableController:
         platforms_dic = {plat["text"]: plat["value"] for plat in platforms}
 
         if plataforma not in platforms_dic:
-            raise ValueError(f"{plataforma} não esta na lista: {platforms_dic}")
+            raise ValueError(f"{plataforma} não esta na lista: {platforms_dic}"
+                             )
 
         return platforms_dic
 
