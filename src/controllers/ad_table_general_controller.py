@@ -1,10 +1,11 @@
 from flask import Blueprint
-from src.controllers.ad_table_controller import AdTableController
 from src.models.ad_table_general_model import AdTableGeneralModel
 from src.models.ad_table_model import AdTableModel
 
 
-ad_table_general_controller = Blueprint("ad_table_general_controller", __name__)
+ad_table_general_controller = Blueprint(
+    "ad_table_general_controller", __name__
+)
 
 
 class AdTableGeneralController:
@@ -15,8 +16,10 @@ class AdTableGeneralController:
             platforms = platforms_data.get("platforms")
 
             platforms_list = [plat["text"] for plat in platforms]
-            print(platforms_list)
-            general_table = await AdTableGeneralModel.create_ad_table_general(platforms_list)
+
+            general_table = await AdTableGeneralModel.create_ad_table_general(
+                platforms_list
+            )
 
             return general_table
         except Exception as e:
@@ -24,6 +27,7 @@ class AdTableGeneralController:
 
 
 ad_table_general_controller.add_url_rule(
-    "/geral", "get_table_general",
+    "/geral",
+    "get_table_general",
     AdTableGeneralController.create_ad_table_general
 )

@@ -8,13 +8,15 @@ ad_table_controller = Blueprint("ad_table_controller", __name__)
 class AdTableController:
     @staticmethod
     async def create_ad_table(plataforma):
-        if plataforma == "favicon.ico":
-            raise ValueError("plataforma contem favicon.ico")
+        if plataforma.lower() == "favicon.ico":
+            return "", 204
 
         try:
             platforms_dic = await AdTableController.get_platform(plataforma)
             if plataforma not in platforms_dic:
-                raise ValueError(f"{plataforma} não está na lista: {platforms_dic}")
+                raise ValueError(
+                    f"{plataforma} não está na lista: {platforms_dic}"
+                )
 
             account_list = await AdTableController.get_accounts(
                 plataforma, platforms_dic
@@ -23,6 +25,7 @@ class AdTableController:
             table = await AdTableController.get_insights(
                 plataforma, platforms_dic, account_list, fields
             )
+
             return table
         except Exception as e:
             return f"Erro ao processar a solicitação: {str(e)}"

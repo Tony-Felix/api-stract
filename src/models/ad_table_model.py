@@ -17,15 +17,19 @@ class AdTableModel:
 
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(url, headers=headers, timeout=90.0)
+                response = await client.get(
+                    url, headers=headers, timeout=90.0
+                )
 
             if response.status_code == 200:
                 data = response.json()
                 if "platforms" not in data:
-                    raise ValueError("A chave 'platforms' não foi encontrada na resposta da API.")
+                    raise ValueError(
+                        "A chave 'platforms' não foi encontrada."
+                    )
                 return data
         except httpx.RequestError as exc:
-            print(f"Erro de requisição: {exc}")
+            raise Exception(f"Erro de requisição: {exc}")
             return None
 
     @staticmethod
@@ -34,36 +38,49 @@ class AdTableModel:
             raise ValueError("URL ou Token não encontrado no ambiente")
 
         if plataforma not in platforms_dic:
-            raise ValueError(f"Erro: Não foi possível encontrar a plataforma '{plataforma}")
+            raise ValueError(
+                f"Erro: Não foi possível encontrar a plataforma '{plataforma}'"
+            )
 
         single_value_platform = platforms_dic.get(plataforma, None)
         if not single_value_platform:
-            return print("Error. plataforma não encontrada")
-        accounts_list = []  # Lista para armazenar todas as contas
-        page = 1  # Começa na primeira página
-        total_pages = None  # Inicialmente desconhecido
+            raise Exception("Error. plataforma não encontrada")
+        accounts_list = []
+        page = 1
+        total_pages = None
 
         async with httpx.AsyncClient() as client:
             while total_pages is None or page <= total_pages:
-                url = f"{API_URL}/accounts?platform={single_value_platform}&page={page}"
+                url = (
+                    f"{API_URL}/accounts?platform={single_value_platform}"
+                    f"&page={page}"
+                )
                 headers = {"Authorization": f"Bearer {API_TOKEN}"}
 
                 try:
-                    response = await client.get(url, headers=headers, timeout=90.0)
+                    response = await client.get(
+                        url, headers=headers, timeout=90.0
+                    )
 
                     if response.status_code != 200:
-                        raise Exception(f"Erro na requisição: {response.status_code}")
+                        raise Exception(
+                            f"Erro na requisição: {response.status_code}"
+                        )
 
                     accounts = response.json()
                     accounts_list.extend(accounts.get("accounts", []))
 
+                    if "pagination" not in accounts:
+                        break
+
                     if total_pages is None:
-                        total_pages = accounts.get("pagination").get("total", 1)
+                        total_pages = accounts.get("pagination").get(
+                            "total", 1
+                        )
 
                     page += 1
-
                 except httpx.ConnectTimeout:
-                    raise Exception("Erro: Timeout ao tentar acessar o endpoint.")
+                    raise Exception("Erro: Timeout.")
                 except Exception as e:
                     raise Exception(f"Erro inesperado: {e}")
 
@@ -84,13 +101,20 @@ class AdTableModel:
 
         async with httpx.AsyncClient() as client:
             while total_pages is None or page <= total_pages:
-                url = f"{API_URL}/fields?platform={single_value_platform}&page={page}"
+                url = (
+                    f"{API_URL}/fields?platform={single_value_platform}"
+                    f"&page={page}"
+                )
                 headers = {"Authorization": f"Bearer {API_TOKEN}"}
                 try:
-                    response = await client.get(url, headers=headers, timeout=90.0)
+                    response = await client.get(
+                        url, headers=headers, timeout=90.0
+                    )
 
                     if response.status_code != 200:
-                        raise Exception(f"Erro na requisição: {response.status_code}")
+                        raise Exception(
+                            f"Erro na requisição: {response.status_code}"
+                        )
 
                     data = response.json()
                     if not data:
@@ -99,9 +123,14 @@ class AdTableModel:
                     fields = data.get("fields")
 
                     if not fields:
-                        raise Exception("O campo 'fields' não foi encontrado na resposta.")
+                        raise Exception(
+                            "O campo 'fields' não foi encontrado na resposta."
+                        )
 
                     fields_list.extend(fields)
+
+                    if "pagination" not in data:
+                        break
 
                     if total_pages is None:
                         total_pages = data.get("pagination").get("total", 1)
@@ -109,7 +138,9 @@ class AdTableModel:
                     page += 1
 
                 except httpx.ConnectTimeout:
-                    raise Exception("Erro: Timeout ao tentar acessar o endpoint.")
+                    raise Exception(
+                        "Erro: Timeout ao tentar acessar o endpoint."
+                    )
                 except Exception as e:
                     raise Exception(f"Erro inesperado: {e}")
 
@@ -130,7 +161,10 @@ class AdTableModel:
         for user in accounts:
             USER_TOKEN, id, name = user["token"], user["id"], user["name"]
 
-            url = f"{API_URL}/insights?platform={single_value_platform}&account={id}&token={USER_TOKEN}&fields={fields_str}"
+            url = (
+                f"{API_URL}/insights?platform={single_value_platform}"
+                f"&account={id}&token={USER_TOKEN}&fields={fields_str}"
+            )
 
             headers = {"Authorization": f"Bearer {API_TOKEN}"}
 
@@ -140,18 +174,18 @@ class AdTableModel:
                     raise Exception(f"Erro ao obter insights da conta {id}")
                 insights_data = response.json()
 
-                if not isinstance(insights_data, dict) or "insights" not in insights_data:
+                if not isinstance(insights_data, dict) or \
+                        "insights" not in insights_data:
                     raise ValueError(f"Resposta da API inválida: esperado uma "
                                      f"lista, mas recebeu {insights_data}")
 
                 for data in insights_data["insights"]:
-                    data.pop("id", None)  # Remover ID se presente
-                    data["account_name"] = name  # Adicionar o nome da conta
-                    data["platform"] = plataforma  # Adicionar o nome da 
+                    data.pop("id", None)
+                    data["account_name"] = name
+                    data["platform"] = plataforma
 
                     insights_list.append(data)
 
-        # Criando e escrevendo no arquivo CSV
         csv_table = await AdTableModel.create_csv(insights_list)
         return csv_table
 
@@ -160,8 +194,7 @@ class AdTableModel:
         output = io.StringIO()
         fieldnames = list(lista_data[0].keys())
         writer = csv.DictWriter(output, fieldnames=fieldnames)
-        
-        # Escreve o cabeçalho e os dados no CSV
+
         writer.writeheader()
         writer.writerows(lista_data)
 

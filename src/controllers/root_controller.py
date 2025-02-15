@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify
-# from urllib.parse import unquote
 
 
 root_controller = Blueprint("root_controller", __name__)
