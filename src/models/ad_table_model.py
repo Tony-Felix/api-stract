@@ -37,12 +37,12 @@ class AdTableModel:
         if not API_URL or not API_TOKEN:
             raise ValueError("URL ou Token não encontrado no ambiente")
 
-        if plataforma not in platforms_dic:
+        if plataforma.lower() not in platforms_dic:
             raise ValueError(
                 f"Erro: Não foi possível encontrar a plataforma '{plataforma}'"
             )
 
-        single_value_platform = platforms_dic.get(plataforma, None)
+        single_value_platform = platforms_dic.get(plataforma.lower(), None)
         if not single_value_platform:
             raise Exception("Error. plataforma não encontrada")
         accounts_list = []
@@ -93,7 +93,7 @@ class AdTableModel:
         if not API_URL or not API_TOKEN:
             raise ValueError("URL ou Token não encontrado no ambiente")
 
-        single_value_platform = platforms_dic.get(plataforma)
+        single_value_platform = platforms_dic.get(plataforma.lower())
 
         fields_list = []
         page = 1
@@ -183,7 +183,20 @@ class AdTableModel:
                     data.pop("id", None)
                     data["account_name"] = name
                     data["platform"] = plataforma
+                    if "cost" in data:
+                        data["spend"] = data.pop("cost")
 
+                    if "adName" in data:
+                        data["ad_name"] = data.pop("adName")
+
+                    if "status" in data:
+                        data["effective_status"] = data.pop("status")
+
+                    if "region" in data:
+                        data["country"] = data.pop("region")
+
+                    if "cost_per_click" in data:
+                        data["cpc"] = data.pop("cost_per_click")
                     insights_list.append(data)
 
         csv_table = await AdTableModel.create_csv(insights_list)

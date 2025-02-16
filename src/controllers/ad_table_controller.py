@@ -13,7 +13,7 @@ class AdTableController:
 
         try:
             platforms_dic = await AdTableController.get_platform(plataforma)
-            if plataforma not in platforms_dic:
+            if plataforma.lower() not in platforms_dic:
                 raise ValueError(
                     f"{plataforma} não está na lista: {platforms_dic}"
                 )
@@ -21,9 +21,9 @@ class AdTableController:
             account_list = await AdTableController.get_accounts(
                 plataforma, platforms_dic
             )
-            fields = await AdTableController.get_fields(plataforma)
+            fields = await AdTableController.get_fields(plataforma.lower())
             table = await AdTableController.get_insights(
-                plataforma, platforms_dic, account_list, fields
+                plataforma.lower(), platforms_dic, account_list, fields
             )
 
             return table
@@ -35,9 +35,10 @@ class AdTableController:
         platforms_data = await AdTableModel.get_platforms()
 
         platforms = platforms_data.get("platforms")
-        platforms_dic = {plat["text"]: plat["value"] for plat in platforms}
+        platforms_dic = {plat["text"].lower(): plat["value"] for plat
+                         in platforms}
 
-        if plataforma not in platforms_dic:
+        if plataforma.lower() not in platforms_dic:
             raise ValueError(f"{plataforma} não esta na lista: {platforms_dic}"
                              )
 

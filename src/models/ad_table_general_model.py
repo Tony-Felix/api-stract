@@ -16,18 +16,6 @@ class AdTableGeneralModel:
         print(general_table)
         result = []
         for row in general_table:
-            if "cost" in row:
-                row["spend"] = row.pop("cost")
-
-            if "adName" in row:
-                row["ad_name"] = row.pop("adName")
-
-            if "status" in row:
-                row["effective_status"] = row.pop("status")
-
-            if "region" in row:
-                row["country"] = row.pop("region")
-
             if "cpc" not in row:
                 if "cost_per_click" not in row:
                     if "spend" in row:
@@ -35,8 +23,6 @@ class AdTableGeneralModel:
                     else:
                         row["cpc"] = ""
                         row["spend"] = ""
-                else:
-                    row["cpc"] = row.pop("cost_per_click")
             result.append(row)
 
         response = await AdTableGeneralModel.create_csv(result)
