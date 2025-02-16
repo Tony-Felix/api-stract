@@ -8,7 +8,6 @@ class AdTableResumeModel:
     async def get_resume_table(table):
         reader = csv.DictReader(table.splitlines())
         grouped_data = defaultdict(list)
-        print(table)
 
         # Agrupa os dados pelo nome da conta
         for row in reader:
@@ -37,7 +36,6 @@ class AdTableResumeModel:
                         aggregated_row["cpc"] = ""
                 else:
                     aggregated_row["cpc"] += float(row["cpc"])
-                print(aggregated_row)
 
             result.append(aggregated_row)
 

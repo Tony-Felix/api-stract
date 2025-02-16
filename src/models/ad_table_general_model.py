@@ -13,7 +13,6 @@ class AdTableGeneralModel:
             dicti_table = csv.DictReader(tabela_csv.splitlines())
             general_table.extend(list(dicti_table))
 
-        print(general_table)
         result = []
         for row in general_table:
             if "cpc" not in row:
